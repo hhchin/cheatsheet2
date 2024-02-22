@@ -1,32 +1,65 @@
 import { Component } from '@angular/core';
+import Fuse from 'fuse.js';
+import {Term, TermsList} from './terms.store';
+
+interface FuseResult {
+  item:Term;
+  RefIndex:number;
+}
 
 @Component({
   selector: 'app-root',
   template: `
-    <!--The content below is only a placeholder and can be replaced.-->
-    <div style="text-align:center" class="content">
-      <h1>
-        Welcome to {{title}}!
-      </h1>
-      <span style="display: block">{{ title }} app is running!</span>
-      <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
+  <div class="container">
+    <div class="search">
+        <div class="header">
+            <h1>Term Search</h1>
+        
+      </div>
+
+      <input class="search-form" type="text" (input)="fuseSearch()" [(ngModel)]="searchTerm" name="searchTerm" autocomplete="on"  
+      placeholder="Search over the 1225 acronyms and terms indexed" autofocus/>
+
+      <div class="results">
+      <li *ngFor="let result of resultsList">
+        <a>{{result.item.longform}}</a>
+      </li>
+      </div>
     </div>
-    <h2>Here are some links to help you start: </h2>
-    <ul>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://angular.io/cli">CLI Documentation</a></h2>
-      </li>
-      <li>
-        <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-      </li>
-    </ul>
-    
-  `,
-  styles: []
+
+</div>
+`,
+  styleUrls: ["./app.component.scss"]
 })
 export class AppComponent {
-  title = 'cheatsheet2';
+  title = 'Term Search';
+  searchTerm:string = '';
+  fuseOptions = {
+    shouldSort: true,
+    threshold: 0.6,
+    location: 0,
+    distance: 100,
+    maxPatternLength: 32,
+    minMatchCharLength: 1,
+    keys: [{
+      name: 'shortform',
+      weight: 0.6
+    }, {
+      name: 'longform',
+      weight: 0.4
+    }]
+  };
+  resultsList:FuseResult[] =[];
+
+  fuse:any;
+  
+  constructor() {
+    this.fuse = new Fuse(TermsList, this.fuseOptions);
+   }
+
+  fuseSearch() {
+    let res = this.fuse.search(this.searchTerm, {limit: 10});
+    console.log(res)
+    this.resultsList = res
+  }
 }
